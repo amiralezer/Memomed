@@ -1,0 +1,15 @@
+.row {
+  column-count: 5;
+  width: auto;
+  height: 500px;
+}
+
+.column{
+  width: auto;
+  height: 400px;
+}
+
+/* 
+.btn-grp{
+ display: block;
+} */

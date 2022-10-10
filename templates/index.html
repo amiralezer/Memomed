@@ -1,0 +1,39 @@
+<head>
+    <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" /> -->
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/mainpage.css') }}">
+</head>
+<body>
+    <h1>Memomed Monitoramento</h1>
+        <div class="row">
+            <div class="column">
+                <h2>Medicine ID</h2>
+                {% for i in range(medicineid|length) %}
+                    <h2>{{medicineid[i]}}</h2>
+                {% endfor %}
+            </div>
+            <div class="column">
+                <h2>Medicine Name</h2>
+                {% for i in range(medicineid|length) %}
+                    <h2>{{medicinenames[i]}}</h2>
+                {% endfor %}
+            </div>
+            <div class="column">
+                <h2>Pill Qnt.</h2>
+                {% for i in range(medicineid|length) %}
+                    <h2>{{pillsqnt[i]}}</h2>
+                {% endfor %}
+            </div>
+            <div class="column">
+                <h2>Hours diff</h2>
+                {% for i in range(medicineid|length) %}
+                    <h2>{{hoursdiff[i]}}</h2>
+                {% endfor %}
+            </div>
+            <!-- <div class="column-btn">
+                {% for i in range(medicineid|length) %}
+                    <button class="btn-grp">Editar</button>
+                {% endfor %}
+            </div> -->
+        </div>
+    
+</body>
