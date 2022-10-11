@@ -1,12 +1,13 @@
-from application import app
-from flask import render_template, request, json, Response, redirect, flash, url_for, session
+from application import app,db
+from flask import  render_template, request, json, jsonify, Response, redirect, flash, url_for, session
 from application.models import dimMedication, User
 from application.forms import LoginForm, RegisterForm
-import psycopg2
-from application import db
+
 
 
 @app.route("/")
+@app.route("/index")
+@app.route("/home")
 def index():
     
     medications = dimMedication.query.all()
@@ -15,8 +16,8 @@ def index():
 
 @app.route("/login", methods=['GET','POST'])
 def login():
-    # if session.get('username'):
-    #     return redirect(url_for('index'))
+    if session.get('username'):
+        return redirect(url_for('index'))
 
     form = LoginForm()
     if form.validate_on_submit():
@@ -26,17 +27,17 @@ def login():
         user = User.query.filter_by(email=email).first() 
         if user and user.get_password(password):
             flash(f"{user.first_name}, you are successfully logged in!", "success")
-            # session['user_id'] = user.user_id
-            # session['username'] = user.first_name
-            return redirect("/")
+            session['user_id'] = user.user_id
+            session['username'] = user.first_name
+            return redirect("/index")
         else:
             flash("Sorry, something went wrong.","danger")
     return render_template("login.html", title="Login", form=form, login=True )
 
 @app.route("/register", methods=['POST','GET'])
 def register():
-    # if session.get('username'):
-    #     return redirect(url_for('index'))
+    if session.get('username'):
+        return redirect(url_for('index'))
     form = RegisterForm()
     if form.validate_on_submit():
         user_id     = User.query.count()
