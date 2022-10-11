@@ -18,27 +18,23 @@ class dimMedication (db.Model):
     HoursApart = db.Column(db.Numeric)
 
 
-#     user_id     =   db.IntField( unique=True )
-#     first_name  =   db.StringField( max_length=50 )
-#     last_name   =   db.StringField( max_length=50 )
-#     email       =   db.StringField( max_length=30, unique=True )
-#     password    =   db.StringField( )
+class User(db.Model):
+    __tablename__ = 'dimUsers'
+    __table_args__ = {
+        'schema': 'MEMOMED',
+        'quote' : True
+    }
+    user_id     =   db.Column(db.Integer, primary_key=True )
+    first_name  =   db.Column(db.String)
+    last_name   =   db.Column(db.String)
+    email       =   db.Column(db.String, unique=True )
+    password    =   db.Column(db.String)
 
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
 
-
-
-# class User(db.Document):
-#     user_id     =   db.IntField( unique=True )
-#     first_name  =   db.StringField( max_length=50 )
-#     last_name   =   db.StringField( max_length=50 )
-#     email       =   db.StringField( max_length=30, unique=True )
-#     password    =   db.StringField( )
-
-#     def set_password(self, password):
-#         self.password = generate_password_hash(password)
-
-#     def get_password(self, password):
-#         return check_password_hash(self.password, password)    
+    def get_password(self, password):
+        return check_password_hash(self.password, password)    
 
 # class Course(db.Document):
 #     courseID   =   db.StringField( max_length=10, unique=True )
