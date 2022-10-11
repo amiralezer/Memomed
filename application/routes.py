@@ -1,6 +1,6 @@
 from application import app,db
 from flask import  render_template, request, json, jsonify, Response, redirect, flash, url_for, session
-from application.models import dimMedication, User
+from application.models import dimMedication, User, dimMedicationSchedule
 from application.forms import LoginForm, RegisterForm
 
 
@@ -9,10 +9,18 @@ from application.forms import LoginForm, RegisterForm
 @app.route("/index")
 @app.route("/home")
 def index():
-    
-    medications = dimMedication.query.all()
-    return render_template("courses.html", index=True, courseData=medications)
+   
+    return render_template("index.html", index=True)
+    # , courseData=medications
 
+
+
+@app.route("/courses")
+def courses():
+    user_id = session['user_id']
+    medications = dimMedicationSchedule.query.filter_by(user_id=user_id)
+    print(medications)
+    return render_template("courses.html", index=True, courseData=medications)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -29,7 +37,7 @@ def login():
             flash(f"{user.first_name}, you are successfully logged in!", "success")
             session['user_id'] = user.user_id
             session['username'] = user.first_name
-            return redirect("/index")
+            return redirect("/courses")
         else:
             flash("Sorry, something went wrong.","danger")
     return render_template("login.html", title="Login", form=form, login=True )
@@ -40,7 +48,7 @@ def logout():
     session.pop('username',None)
     return redirect(url_for('index'))
 
-    
+
 @app.route("/register", methods=['POST','GET'])
 def register():
     if session.get('username'):
