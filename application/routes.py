@@ -34,6 +34,13 @@ def login():
             flash("Sorry, something went wrong.","danger")
     return render_template("login.html", title="Login", form=form, login=True )
 
+@app.route("/logout")
+def logout():
+    session['user_id']=False
+    session.pop('username',None)
+    return redirect(url_for('index'))
+
+    
 @app.route("/register", methods=['POST','GET'])
 def register():
     if session.get('username'):
