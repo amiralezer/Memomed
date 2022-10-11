@@ -11,7 +11,7 @@ from application.forms import LoginForm, RegisterForm
 def index():
    
     return render_template("index.html", index=True)
-    # , courseData=medications
+
 
 
 
