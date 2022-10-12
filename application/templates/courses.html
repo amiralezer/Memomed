@@ -3,8 +3,9 @@
 {% block content %}
 <h1>Portal Monitoramento</h1>
 
-<!--  Display the Term and Year here --->
-<!-- <h3>Term: {{ term }} </h3> -->
+{% if lenCourseData <= 4 %}
+    <button type="button" onclick="window.location.href='{{ url_for( 'addbutton' ) }}';">Adicionar</button>
+{% endif %}
 
 <div>
     <table class="table table-hover">
