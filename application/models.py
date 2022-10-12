@@ -1,22 +1,55 @@
+from dataclasses import dataclass
 import flask
 import flask_sqlalchemy
 from application import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.inspection import inspect
+from flask import json
+import datetime
 
 
+@dataclass
 class dimMedication (db.Model):
+    MedicationID : int
+    MedicationName : str
     __tablename__ = 'dimMedication'
     __table_args__ = {
         'schema': 'MEMOMED',
         'quote' : True
     }
+    MedicationID = db.Column(db.Integer, primary_key=True)
+    MedicationName = db.Column(db.String)
+
+@dataclass
+class dimMedicationSchedule (db.Model):
+
+    MedicineID: int
+    isDeleted: bool
+    InitialMedicinePills : int
+    InitialTime : datetime
+    HoursApart : float
+    user_id : int
+    NextTime : datetime
+    RemainingPills : int
+
+    __tablename__ = 'dimMedicationSchedule'
+    __table_args__ = {
+        'schema': 'MEMOMED',
+        'quote' : True
+    }
+
     MedicineID = db.Column(db.Integer, primary_key=True)
-    MedicineName = db.Column(db.String)
-    MedicinePills = db.Column(db.Integer)
+    isDeleted = db.Column(db.Boolean)
+    InitialMedicinePills = db.Column(db.Integer)
     InitialTime = db.Column(db.DateTime)
     HoursApart = db.Column(db.Numeric)
+    user_id =   db.Column(db.Integer)
+    NextTime = db.Column(db.DateTime)
+    RemainingPills = db.Column(db.Integer)
 
+    def as_dict(self):
+       return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
 
 class User(db.Model):
     __tablename__ = 'dimUsers'
@@ -34,15 +67,4 @@ class User(db.Model):
         self.password = generate_password_hash(password)
 
     def get_password(self, password):
-        return check_password_hash(self.password, password)    
-
-# class Course(db.Document):
-#     courseID   =   db.StringField( max_length=10, unique=True )
-#     title       =   db.StringField( max_length=100 )
-#     description =   db.StringField( max_length=255 )
-#     credits     =   db.IntField()
-#     term        =   db.StringField( max_length=25 )
-
-# class Enrollment(db.Document):
-#     user_id     =   db.IntField()
-#     courseID    =   db.StringField( max_length=10 )
+        return check_password_hash(self.password, password)

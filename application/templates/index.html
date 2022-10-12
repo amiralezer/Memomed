@@ -1,43 +1,24 @@
 {% extends "layout.html" %}
-    
+
 {% block content %}
-<h1>Course Offerings</h1>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h1>Bem-vindo ao portal Memomed!</h1>
 
-<!--  Display the Term and Year here --->
-<!-- <h3>Term: {{ term }} </h3> -->
+            {% if session['username'] %}
+                <h3>Vamos começar?</h3>
+            {% else %}
+                <p>Você ja possui cadastro? <a href="{{url_for('login') }}">Login</a></p>
+            {% endif %}
 
-<div>
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Remédio</th>
-            <th scope="col">Pilulas restantes</th>
-            <th scope="col">Início tratamento</th>
-            <th scope="col">Horas entre pílulas</th>
-            <th scope="col">Enroll</th>
-        </tr>
-        </thead>
-        <tbody>
+            <div style="text-align:left;">
+                <h2>O que é o Memomed?</h2> 
+                
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias optio odio dolore ducimus tempore at sequi? Nobis magni ducimus sint ipsam ipsa. Et odio aliquam tempore reiciendis asperiores unde non. </p>
 
-        <!-- Construct the rest of courses here -->
-        {% for data in courseData %}
-        <tr>
-            <td scope='row'>{{ data["MedicineID"] }}</td>
-            <td>{{ data["MedicineName"] }}</td>
-            <td>{{ data["MedicinePills"] }}</td>
-            <td>{{ data["InitialTime"] }}</td>
-            <td>{{ data["HoursApart"] }}</td>
-            <td>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex impedit sed fugit, dignissimos deleniti nostrum commodi eligendi nam velit vero fuga fugiat debitis magnam delectus laudantium cupiditate libero, expedita exercitationem.</p> 
+            </div>
 
-                <button>Editar</button>
-            
-            </td>
-        </tr>
-        {% endfor %}
-        
-        </tbody>
-    </table>
-</div>
-
+        </div>
+    </div>
 {% endblock %}
