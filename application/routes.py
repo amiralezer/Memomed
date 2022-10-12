@@ -2,7 +2,18 @@ from application import app,db
 from flask import  render_template, request, json, jsonify, Response, redirect, flash, url_for, session
 from application.models import dimMedication, User, dimMedicationSchedule
 from application.forms import LoginForm, RegisterForm
+from flask_restx import Resource
 
+
+@app.route('/esp32-medshedule')
+def GetMedSchedule ():
+    f=dimMedicationSchedule.query.all()
+    return jsonify(f)
+
+@app.route('/esp32-med')
+def GetMed ():
+    f=dimMedication.query.all()
+    return jsonify(f)
 
 
 @app.route("/")
@@ -11,8 +22,6 @@ from application.forms import LoginForm, RegisterForm
 def index():
    
     return render_template("index.html", index=True)
-
-
 
 
 @app.route("/courses")
