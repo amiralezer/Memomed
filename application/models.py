@@ -48,10 +48,18 @@ class dimMedicationSchedule (db.Model):
     NextTime = db.Column(db.DateTime)
     RemainingPills = db.Column(db.Integer)
 
-    def as_dict(self):
-       return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
 
+
+
+@dataclass
 class User(db.Model):
+    user_id : int
+    first_name : str
+    last_name : str
+    email : str
+    password : str
+
+    
     __tablename__ = 'dimUsers'
     __table_args__ = {
         'schema': 'MEMOMED',

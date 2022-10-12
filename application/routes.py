@@ -1,19 +1,26 @@
 from application import app,db
 from flask import  render_template, request, json, jsonify, Response, redirect, flash, url_for, session
 from application.models import dimMedication, User, dimMedicationSchedule
-from application.forms import LoginForm, RegisterForm
+from application.forms import LoginForm, RegisterForm, AddMedicationForm
 from flask_restx import Resource
+from datetime import datetime,timedelta
 
 
-@app.route('/esp32-medshedule')
-def GetMedSchedule ():
-    f=dimMedicationSchedule.query.all()
-    return jsonify(f)
+@app.route('/get-user/<email>')
+def GetUser (email):
+    getUserid = User.query.with_entities(User.user_id).filter_by(email=email).first()
+    return jsonify(getUserid)
+
+@app.route('/esp32-medshedule/<user_id>')
+def GetMedSchedule (user_id):
+    user_id = user_id
+    medSchedule=dimMedicationSchedule.query.filter_by(user_id=user_id).all()
+    return jsonify(medSchedule)
 
 @app.route('/esp32-med')
 def GetMed ():
-    f=dimMedication.query.all()
-    return jsonify(f)
+    med=dimMedication.query.all()
+    return jsonify(med)
 
 
 @app.route("/")
@@ -27,9 +34,8 @@ def index():
 @app.route("/courses")
 def courses():
     user_id = session['user_id']
-    medications = dimMedicationSchedule.query.filter_by(user_id=user_id)
-    print(medications)
-    return render_template("courses.html", index=True, courseData=medications)
+    medications = dimMedicationSchedule.query.filter_by(user_id=user_id).all()
+    return render_template("courses.html", courses=True, courseData=medications,lenCourseData = len(medications))
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -79,3 +85,28 @@ def register():
         flash("You are successfully registered!","success")
         return redirect(url_for('index'))
     return render_template("register.html", title="Register", form=form, register=True)
+
+@app.route("/addbutton",methods=['POST','GET'])
+def addbutton():
+    names = dimMedication.query.with_entities(dimMedication.MedicationName).all()
+    form = AddMedicationForm()
+    form.MedName.choices = [ g.MedicationName for g in names]
+
+    if form.validate_on_submit():
+        MedicineID = dimMedication.query.with_entities(dimMedication.MedicationID).filter_by(MedicationName=form.MedName.data).first()
+        isDeleted = False
+        InitialMedicinePills = form.InitialPills.data
+        InitialTime = form.InitialTime.data
+        HoursApart = form.HoursDiff.data
+        user_id = session['user_id']
+        h = HoursApart.split('.')[0]
+        m = HoursApart.split('.')[1]
+        NextTime = (datetime.strptime(form.InitialTime.data,'%d/%m/%Y %H:%M') + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10)))
+        RemainingPills = form.InitialPills.data
+        MedRecord = dimMedicationSchedule(MedicineID=MedicineID,isDeleted=isDeleted,InitialMedicinePills=InitialMedicinePills,InitialTime=InitialTime,HoursApart=HoursApart,user_id=user_id,NextTime=NextTime,RemainingPills=RemainingPills)
+        db.session.add(MedRecord)
+        db.session.commit()
+        flash("Medicação Adicionada com sucesso","success")
+        return redirect(url_for('courses'))
+    return render_template("addmedication.html", title="Adicionar Medicamento", form=form)
+   
