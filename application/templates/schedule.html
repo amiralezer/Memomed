@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+    
+{% block content %}
+<h1>Portal Monitoramento</h1>
+
+{% if lenCourseData <= 4 %}
+    <button type="button" onclick="window.location.href='{{ url_for( 'addbutton' ) }}';">Adicionar</button>
+{% endif %}
+
+<div>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Remédio</th>
+            <th scope="col">Inicio Medicacao</th>
+            <th scope="col">Proxima Ingestao</th>
+            <th scope="col">Ultima Ingestao</th>
+            <th scope="col">Pilulas Inicio</th>
+            <th scope="col">Pilulas restantes</th>
+            <th scope="col">Horas entre pílulas</th>
+            <th scope="col">Editar</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <!-- Construct the rest of courses here -->
+       
+        {% for data in courseData %}
+           <tr>
+                <td scope='row'>{{ data["RecordID"] }}</td>
+                <td>{{ data["MedicationName"] }}</td>
+                <td>{{ data["InitialTime"].strftime("%d/%m/%Y %H:%M") }}</td>
+                <td>{{ data["NextTime"].strftime("%d/%m/%Y %H:%M") }}</td>
+                {%if data["LastTime"]== None %}
+                <td></td>
+                {%else%}
+                <td>{{data["LastTime"].strftime("%d/%m/%Y %H:%M")}}</td>
+                {%endif%}
+                <td>{{ data["InitialMedicinePills"] }}</td>
+                <td>{{ data["RemainingPills"] }}</td>
+                <td>{{ data["HoursApart"] }}</td>
+                <td>
+                    <button type="button" onclick="window.location.href='{{ url_for( 'delmed',medid=data.RecordID) }}';">Deletar</button>
+          
+                </td>
+           </tr>
+        {% endfor %}    
+        
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
