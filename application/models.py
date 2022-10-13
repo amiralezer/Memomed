@@ -32,6 +32,8 @@ class dimMedicationSchedule (db.Model):
     user_id : int
     NextTime : datetime
     RemainingPills : int
+    LastTime : datetime
+    RecordID : int
 
     __tablename__ = 'dimMedicationSchedule'
     __table_args__ = {
@@ -39,7 +41,7 @@ class dimMedicationSchedule (db.Model):
         'quote' : True
     }
 
-    MedicineID = db.Column(db.Integer, primary_key=True)
+    MedicineID = db.Column(db.Integer)
     isDeleted = db.Column(db.Boolean)
     InitialMedicinePills = db.Column(db.Integer)
     InitialTime = db.Column(db.DateTime)
@@ -47,6 +49,8 @@ class dimMedicationSchedule (db.Model):
     user_id =   db.Column(db.Integer)
     NextTime = db.Column(db.DateTime)
     RemainingPills = db.Column(db.Integer)
+    LastTime = db.Column(db.DateTime)
+    RecordID = db.Column(db.Integer, primary_key=True )
 
 
 
