@@ -13,6 +13,7 @@
         <tr>
             <th scope="col">ID</th>
             <th scope="col">Remédio</th>
+            <th scope="col">Gaveta</th>
             <th scope="col">Inicio Medicacao</th>
             <th scope="col">Proxima Ingestao</th>
             <th scope="col">Ultima Ingestao</th>
@@ -30,6 +31,7 @@
            <tr>
                 <td scope='row'>{{ data["RecordID"] }}</td>
                 <td>{{ data["MedicationName"] }}</td>
+                <td>{{ data["Drawer"] }}</td>
                 <td>{{ data["InitialTime"].strftime("%d/%m/%Y %H:%M") }}</td>
                 <td>{{ data["NextTime"].strftime("%d/%m/%Y %H:%M") }}</td>
                 {%if data["LastTime"]== None %}

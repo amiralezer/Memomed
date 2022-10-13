@@ -1,10 +1,67 @@
 from sqlalchemy import null, func
-from application import app,db
+from application import app,db,scheduler
 from flask import  render_template, request, json, jsonify, Response, redirect, flash, url_for, session
 from application.models import dimMedication, User, dimMedicationSchedule
 from application.forms import LoginForm, RegisterForm, AddMedicationForm
 from flask_restx import Resource
 from datetime import datetime,timedelta
+
+######   NEED TO FIX WHAT IS GOING TO ESP (LIST OF RECORDS WITH CLOSE NEXT TIME, SO THAT ESP CAN THE CALL /POST/<RECORDID>)
+# @scheduler.task('interval', id='do_job_1', seconds=15)
+# def job1():
+    
+#     fmt = '%d/%m/%Y %H:%M'
+
+#     timeneeded = datetime.now() + timedelta(seconds=250)
+#     aux = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).filter(dimMedicationSchedule.NextTime <=timeneeded\
+#                                                      ,dimMedicationSchedule.FlagESP == False\
+#                                                      ,dimMedicationSchedule.isDeleted == False).all()
+#     print(aux)
+#     if (aux.count()) > 0 :
+#         print('Entrei no IF')
+#         print(aux)
+
+#         EspNeedsFlag = dimMedicationSchedule.query.filter(dimMedicationSchedule.NextTime <=timeneeded\
+#                                                         ,dimMedicationSchedule.FlagESP == False\
+#                                                         ,dimMedicationSchedule.isDeleted == False)\
+#                                             .update({'FlagESP':True})
+#         db.session.commit()
+#         UpdateSchedule(int(aux[0]))
+
+@app.route('/post/<recordid>',methods=['GET','POST'])
+def UpdateSchedule(recordid):
+    EspData = request.data
+
+    NextTime = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.NextTime)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+    LastTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'LastTime':NextTime})                                                
+    HoursApart = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.HoursApart)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+    hoursfinal =str(HoursApart[0])
+    h= hoursfinal.split('.')[0]
+    m = hoursfinal.split('.')[1]
+    NextTimeDate = NextTime[0] + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10))
+
+    
+    if (dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RemainingPills)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()[0] - 1 == 0):
+        Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1,'isDeleted':True })                                                
+    else:
+        Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1})  
+    
+    NextTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'NextTime':NextTimeDate})     
+    EspUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'FlagESP':False})
+    db.session.commit()
+    return redirect(url_for('schedule'))
+
+
+
+
 
 
 @app.route('/get-user/<email>')
@@ -15,7 +72,7 @@ def GetUser (email):
 @app.route('/esp32-medshedule/<user_id>')
 def GetMedSchedule (user_id):
     user_id = user_id
-    medSchedule=dimMedicationSchedule.query.filter_by(user_id=user_id).all()
+    medSchedule=dimMedicationSchedule.query.filter_by(user_id=user_id,FlagESP=True).all()
     return jsonify(medSchedule)
 
 @app.route('/esp32-med')
@@ -36,7 +93,7 @@ def index():
 def schedule():
     user_id = session['user_id']
     medications = dimMedicationSchedule.query.join(dimMedication, dimMedicationSchedule.MedicineID==dimMedication.MedicationID)\
-        .add_columns(dimMedication.MedicationName,dimMedicationSchedule.RecordID, dimMedicationSchedule.InitialTime,dimMedicationSchedule.NextTime,dimMedicationSchedule.LastTime, dimMedicationSchedule.InitialMedicinePills,dimMedicationSchedule.RemainingPills,dimMedicationSchedule.HoursApart)\
+        .add_columns(dimMedication.MedicationName,dimMedicationSchedule.RecordID, dimMedicationSchedule.InitialTime,dimMedicationSchedule.NextTime,dimMedicationSchedule.LastTime, dimMedicationSchedule.InitialMedicinePills,dimMedicationSchedule.RemainingPills,dimMedicationSchedule.HoursApart,dimMedicationSchedule.Drawer)\
         .filter(dimMedicationSchedule.user_id == user_id)\
         .filter(dimMedicationSchedule.isDeleted == False)\
         .order_by(dimMedicationSchedule.RecordID).all()
@@ -101,7 +158,10 @@ def addbutton():
     if form.validate_on_submit():
         RecordIDs= dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).all()
         values = [ RecordIDd[0] for RecordIDd in RecordIDs ]
-        RecordID = max(values) + 1
+        if values:
+            RecordID = max(values) + 1
+        else :
+            RecordID=1
         MedicineID = dimMedication.query.with_entities(dimMedication.MedicationID).filter_by(MedicationName=form.MedName.data).first()
         isDeleted = False
         InitialMedicinePills = form.InitialPills.data
@@ -110,10 +170,12 @@ def addbutton():
         userId = session['user_id']
         h = HoursApart.split('.')[0]
         m = HoursApart.split('.')[1]
+        Drawer = form.Drawer.data
         NextTime = (datetime.strptime(form.InitialTime.data,'%d/%m/%Y %H:%M') + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10)))
         RemainingPills = form.InitialPills.data
         LastTime = None
-        MedRecord = dimMedicationSchedule(MedicineID=MedicineID,isDeleted=isDeleted,InitialMedicinePills=InitialMedicinePills,InitialTime=InitialTime,HoursApart=HoursApart,user_id=userId,NextTime=NextTime,RemainingPills=RemainingPills,LastTime=LastTime,RecordID=RecordID)
+        FlagESP = False
+        MedRecord = dimMedicationSchedule(MedicineID=MedicineID,isDeleted=isDeleted,InitialMedicinePills=InitialMedicinePills,InitialTime=InitialTime,HoursApart=HoursApart,user_id=userId,NextTime=NextTime,RemainingPills=RemainingPills,LastTime=LastTime,Drawer=Drawer,RecordID=RecordID,FlagESP=FlagESP)
         print(MedRecord)
         db.session.add(MedRecord)
         db.session.commit()
@@ -123,8 +185,7 @@ def addbutton():
    
 @app.route("/delete/<medid>",methods=['POST','GET'])
 def delmed(medid):
-    med = dimMedicationSchedule.query.filter_by(RecordID=medid).first()
-    db.session.delete(med)
+    med = dimMedicationSchedule.query.filter_by(RecordID=medid).update({'isDeleted':True})
     db.session.commit()
     flash("Medicação Removida com sucesso","success")
     return redirect(url_for('schedule'))

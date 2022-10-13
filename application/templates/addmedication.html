@@ -14,6 +14,12 @@
                      <span class="error-message">{{ error }}</span>
                     {% endfor %}
                 </p>
+                <p> {{ form.Drawer.label }}</br>
+                    {{ form.Drawer }}
+                    {% for error in form.Drawer.errors %}
+                     <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                </p>
 
                 <p> {{ form.InitialPills.label }}</br>
                     {{ form.InitialPills }}

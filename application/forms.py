@@ -27,11 +27,13 @@ class RegisterForm(FlaskForm):
 
 class AddMedicationForm(FlaskForm):
     PillsNum = list(range(1, 13))
-    HourNum = np.arange(1,24.5,0.5)
-    TimeNum = [x.strftime('%d/%m/%Y %H:%M') for x in [datetime.datetime.now() + datetime.timedelta(minutes=10*x) for x in range(1, 145)]]
+    HourNum = np.arange(0.05,24.5,0.05)
+    TimeNum = [x.strftime('%d/%m/%Y %H:%M') for x in [datetime.datetime.now() + datetime.timedelta(minutes=2*x) for x in range(1, 145)]]
+    DrawNum = list(range(1, 6))
     MedName   = SelectField("Nome Remedio", validators=[DataRequired()])
     InitialPills = SelectField("Numero de comprimidos", validators=[DataRequired()],choices=PillsNum)
     InitialTime = SelectField("Inicio Medicação:", validators=[DataRequired()],choices=TimeNum)
+    Drawer = SelectField("Gaveta:", validators=[DataRequired()],choices=DrawNum)
     HoursDiff = SelectField("Tempo entre doses (horas)", validators=[DataRequired()],choices = HourNum)
     submit = SubmitField("Cadastrar Medicamento")
 
