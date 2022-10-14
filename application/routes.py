@@ -7,12 +7,12 @@ from flask_restx import Resource
 from datetime import datetime,timedelta
 
 ######   NEED TO FIX WHAT IS GOING TO ESP (LIST OF RECORDS WITH CLOSE NEXT TIME, SO THAT ESP CAN THE CALL /POST/<RECORDID>)
-# @scheduler.task('interval', id='do_job_1', seconds=15)
+# @scheduler.task('interval', id='do_job_1', seconds=60)
 # def job1():
     
 #     fmt = '%d/%m/%Y %H:%M'
 
-#     timeneeded = datetime.now() + timedelta(seconds=250)
+#     timeneeded = datetime.now() + timedelta(seconds=60)
 #     aux = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).filter(dimMedicationSchedule.NextTime <=timeneeded\
 #                                                      ,dimMedicationSchedule.FlagESP == False\
 #                                                      ,dimMedicationSchedule.isDeleted == False).all()
@@ -85,7 +85,7 @@ def GetMed ():
 @app.route("/index")
 @app.route("/home")
 def index():
-   
+    print(dimMedicationSchedule.query.filter_by(Drawer=1).first())
     return render_template("index.html", index=True)
 
 

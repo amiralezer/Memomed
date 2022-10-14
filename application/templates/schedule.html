@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Portal Monitoramento</h1>
 
-{% if lenCourseData <= 4 %}
+{% if lenCourseData <=3 %}
     <button type="button" onclick="window.location.href='{{ url_for( 'addbutton' ) }}';">Adicionar</button>
 {% endif %}
 
