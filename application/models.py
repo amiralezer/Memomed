@@ -34,6 +34,8 @@ class dimMedicationSchedule (db.Model):
     RemainingPills : int
     LastTime : datetime
     RecordID : int
+    Drawer : int
+    FlagESP : bool
 
     __tablename__ = 'dimMedicationSchedule'
     __table_args__ = {
@@ -51,6 +53,8 @@ class dimMedicationSchedule (db.Model):
     RemainingPills = db.Column(db.Integer)
     LastTime = db.Column(db.DateTime)
     RecordID = db.Column(db.Integer, primary_key=True )
+    Drawer =   db.Column(db.Integer)
+    FlagESP = db.Column(db.Boolean)
 
 
 
