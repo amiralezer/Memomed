@@ -5,7 +5,9 @@ import email_validator
 from application.models import User,dimMedicationSchedule
 import numpy as np
 import datetime
+from datetime import timedelta
 from flask import session,flash
+import math
 
 class LoginForm(FlaskForm):
     email   = StringField("Email", validators=[DataRequired(), Email()])
@@ -28,8 +30,8 @@ class RegisterForm(FlaskForm):
 
 class AddMedicationForm(FlaskForm):
     PillsNum = list(range(1, 13))
-    HourNum = np.arange(0.05,24.5,0.05)
-    TimeNum = [x.strftime('%d/%m/%Y %H:%M') for x in [datetime.datetime.now() + datetime.timedelta(minutes=2*x) for x in range(1, 145)]]
+    HourNum = np.arange(0.5,24.5,0.5)
+    TimeNum = [x.strftime('%d/%m/%Y %H:%M') for x in [(datetime.datetime.min + math.ceil((datetime.datetime.now() - datetime.datetime.min) / timedelta(minutes=10)) * timedelta(minutes=10)) + datetime.timedelta(minutes=10*x) for x in range(1, 145)]]
     DrawNum = list(range(1, 5))
     MedName   = SelectField("Nome Remedio", validators=[DataRequired()])
     InitialPills = SelectField("Numero de comprimidos", validators=[DataRequired()],choices=PillsNum)
@@ -43,8 +45,11 @@ class AddMedicationForm(FlaskForm):
         if drawer:
             raise ValidationError("Gaveta em uso. Escolha outra!")
 
-    # def validate_InitialTime (self,InitialTime):
-    #     iniTime = dimMedicationSchedule.query.filter_by(InitialTime=InitialTime.data,user_id=session["user_id"],isDeleted=False).first()
+    def validate_InitialTime (self,InitialTime):
+        
+         iniTime = dimMedicationSchedule.query.filter_by(InitialTime=datetime.datetime.strptime(InitialTime.data, '%d/%m/%Y %H:%M'),user_id=session["user_id"],isDeleted=False).first()
+         if iniTime:
+            raise ValidationError("Horario inicial de outro medicamento. Escolha outro!")
 
 
 
