@@ -27,7 +27,56 @@ from datetime import datetime,timedelta
 #                                             .update({'FlagESP':True})
 #         db.session.commit()
 #         UpdateSchedule(int(aux[0]))
+###TESTTT
+@scheduler.task('interval', id='do_job_1', seconds=300)
+def job1():
+    
+    fmt = '%d/%m/%Y %H:%M'
+    def UpdateSchedulee(recordid):
 
+        NextTime = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.NextTime)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+        LastTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'LastTime':NextTime})                                                
+        HoursApart = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.HoursApart)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+        hoursfinal =str(HoursApart[0])
+        h= hoursfinal.split('.')[0]
+        m = hoursfinal.split('.')[1]
+        NextTimeDate = NextTime[0] + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10))
+
+    
+        if (dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RemainingPills)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()[0] - 1 == 0):
+            Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1,'isDeleted':True })                                                
+        else:
+            Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1})  
+    
+        NextTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'NextTime':NextTimeDate})     
+        EspUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'FlagESP':False})
+        db.session.commit()
+    timeneededplus = datetime.now() + timedelta(seconds=290)
+    timeneededminus = datetime.now() + timedelta(seconds=-290)
+
+    aux = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).filter(dimMedicationSchedule.NextTime <=timeneededplus\
+                                                     ,dimMedicationSchedule.FlagESP == False\
+                                                     ,dimMedicationSchedule.NextTime >=timeneededminus\
+                                                     ,dimMedicationSchedule.isDeleted == False).all()
+    if aux != None :
+        print("entrei no if")
+        print(aux)
+        for row in aux:
+            UpdateSchedulee(row.RecordID)
+
+
+    
+
+
+   
 @app.route('/post/<recordid>',methods=['GET','POST'])
 def UpdateSchedule(recordid):
     EspData = request.data
@@ -96,7 +145,7 @@ def schedule():
         .add_columns(dimMedication.MedicationName,dimMedicationSchedule.RecordID, dimMedicationSchedule.InitialTime,dimMedicationSchedule.NextTime,dimMedicationSchedule.LastTime, dimMedicationSchedule.InitialMedicinePills,dimMedicationSchedule.RemainingPills,dimMedicationSchedule.HoursApart,dimMedicationSchedule.Drawer)\
         .filter(dimMedicationSchedule.user_id == user_id)\
         .filter(dimMedicationSchedule.isDeleted == False)\
-        .order_by(dimMedicationSchedule.RecordID).all()
+        .order_by(dimMedicationSchedule.Drawer).all()
     
     return render_template("schedule.html", schedule=True, courseData=medications,lenCourseData = len(medications))
 
@@ -188,5 +237,36 @@ def delmed(medid):
     med = dimMedicationSchedule.query.filter_by(RecordID=medid).update({'isDeleted':True})
     db.session.commit()
     flash("Medicação Removida com sucesso","success")
+    return redirect(url_for('schedule'))
+
+
+def UpdateScheduleteste(recordid):
+  
+
+    NextTime = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.NextTime)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+    LastTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'LastTime':NextTime})                                                
+    HoursApart = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.HoursApart)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+    hoursfinal =str(HoursApart[0])
+    h= hoursfinal.split('.')[0]
+    m = hoursfinal.split('.')[1]
+    NextTimeDate = NextTime[0] + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10))
+
+    
+    if (dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RemainingPills)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()[0] - 1 == 0):
+        Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1,'isDeleted':True })                                                
+    else:
+        Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1})  
+    
+    NextTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'NextTime':NextTimeDate})     
+    EspUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'FlagESP':False})
+    db.session.commit()
     return redirect(url_for('schedule'))
 
