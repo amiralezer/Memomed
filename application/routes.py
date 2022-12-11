@@ -6,71 +6,97 @@ from application.forms import LoginForm, RegisterForm, AddMedicationForm
 from flask_restx import Resource
 from datetime import datetime,timedelta
 
-######   NEED TO FIX WHAT IS GOING TO ESP (LIST OF RECORDS WITH CLOSE NEXT TIME, SO THAT ESP CAN THE CALL /POST/<RECORDID>)
-# @scheduler.task('interval', id='do_job_1', seconds=60)
-# def job1():
-    
-#     fmt = '%d/%m/%Y %H:%M'
 
-#     timeneeded = datetime.now() + timedelta(seconds=60)
-#     aux = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).filter(dimMedicationSchedule.NextTime <=timeneeded\
-#                                                      ,dimMedicationSchedule.FlagESP == False\
-#                                                      ,dimMedicationSchedule.isDeleted == False).all()
-#     print(aux)
-#     if (aux.count()) > 0 :
-#         print('Entrei no IF')
-#         print(aux)
-
-#         EspNeedsFlag = dimMedicationSchedule.query.filter(dimMedicationSchedule.NextTime <=timeneeded\
-#                                                         ,dimMedicationSchedule.FlagESP == False\
-#                                                         ,dimMedicationSchedule.isDeleted == False)\
-#                                             .update({'FlagESP':True})
-#         db.session.commit()
-#         UpdateSchedule(int(aux[0]))
-###TESTTT
-@scheduler.task('interval', id='do_job_1', seconds=300)
-def job1():
-    
-    fmt = '%d/%m/%Y %H:%M'
-    def UpdateSchedulee(recordid):
-
-        NextTime = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.NextTime)\
-                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
-        LastTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
-                                            .update({'LastTime':NextTime})                                                
-        HoursApart = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.HoursApart)\
-                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
-        hoursfinal =str(HoursApart[0])
-        h= hoursfinal.split('.')[0]
-        m = hoursfinal.split('.')[1]
-        NextTimeDate = NextTime[0] + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10))
-
-    
-        if (dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RemainingPills)\
-                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()[0] - 1 == 0):
-            Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
-                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1,'isDeleted':True })                                                
-        else:
-            Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
-                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1})  
-    
-        NextTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
-                                             .update({'NextTime':NextTimeDate})     
-        EspUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
-                                            .update({'FlagESP':False})
-        db.session.commit()
-    timeneededplus = datetime.now() + timedelta(seconds=290)
-    timeneededminus = datetime.now() + timedelta(seconds=-290)
-
+@scheduler.task('interval', id='do_job_2', seconds=30)
+def job2():
+    print('job triggado')
+    timeneededplus = datetime.now() + timedelta(seconds=30)
     aux = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).filter(dimMedicationSchedule.NextTime <=timeneededplus\
                                                      ,dimMedicationSchedule.FlagESP == False\
-                                                     ,dimMedicationSchedule.NextTime >=timeneededminus\
+    #                                                 ,dimMedicationSchedule.NextTime >=timeneededminus\
                                                      ,dimMedicationSchedule.isDeleted == False).all()
-    if aux != None :
+
+    if len(aux) != 0 :
         print("entrei no if")
         print(aux)
         for row in aux:
             UpdateSchedulee(row.RecordID)
+    return ('Job finished')
+
+def UpdateSchedulee(recordid):   
+    print('update schedule triggado')
+
+    print(recordid)
+    NextTime = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.NextTime)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+    LastTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'LastTime':NextTime})                                                
+    HoursApart = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.HoursApart)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()
+    hoursfinal =str(HoursApart[0])
+    h= hoursfinal.split('.')[0]
+    m = hoursfinal.split('.')[1]
+    NextTimeDate = NextTime[0] + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/20)) # dividindo por 20 p deixar test friendly
+
+    
+    if (dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RemainingPills)\
+                                                        .filter(dimMedicationSchedule.RecordID == recordid).first()[0] - 1 == 0):
+        Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1,'isDeleted':True })                                                
+    else:
+        Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1})  
+    
+    NextTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                             .update({'NextTime':NextTimeDate})     
+    EspUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+                                            .update({'FlagESP':False})
+    db.session.commit()
+
+
+# @scheduler.task('interval', id='do_job_1', seconds=30)
+# def job1():
+#     fmt = '%d/%m/%Y %H:%M'
+#     def UpdateSchedulee(recordid):
+#         print('job triggado')
+#         print(recordid)
+#         NextTime = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.NextTime)\
+#                                                         .filter(dimMedicationSchedule.RecordID == recordid).first()
+#         LastTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+#                                             .update({'LastTime':NextTime})                                                
+#         HoursApart = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.HoursApart)\
+#                                                         .filter(dimMedicationSchedule.RecordID == recordid).first()
+#         hoursfinal =str(HoursApart[0])
+#         h= hoursfinal.split('.')[0]
+#         m = hoursfinal.split('.')[1]
+#         NextTimeDate = NextTime[0] + timedelta(hours=int(h)) + timedelta(minutes=(int(m)*60/10))
+
+    
+#         if (dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RemainingPills)\
+#                                                         .filter(dimMedicationSchedule.RecordID == recordid).first()[0] - 1 == 0):
+#             Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+#                                              .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1,'isDeleted':True })                                                
+#         else:
+#             Pills = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+#                                              .update({'RemainingPills':dimMedicationSchedule.RemainingPills -1})  
+    
+#         NextTimeUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+#                                              .update({'NextTime':NextTimeDate})     
+#         EspUpdate = dimMedicationSchedule.query.filter(dimMedicationSchedule.RecordID == recordid)\
+#                                             .update({'FlagESP':False})
+#         db.session.commit()
+#     timeneededplus = datetime.now() + timedelta(seconds=30)
+#     #timeneededminus = datetime.now() + timedelta(seconds=-30)
+
+#     aux = dimMedicationSchedule.query.with_entities(dimMedicationSchedule.RecordID).filter(dimMedicationSchedule.NextTime <=timeneededplus\
+#                                                      ,dimMedicationSchedule.FlagESP == False\
+#     #                                                 ,dimMedicationSchedule.NextTime >=timeneededminus\
+#                                                      ,dimMedicationSchedule.isDeleted == False).all()
+#     if len(aux) != 0 :
+#         print("entrei no if")
+#         print(aux)
+#         for row in aux:
+#             UpdateSchedulee(row.RecordID)
 
 
     
@@ -121,7 +147,7 @@ def GetUser (email):
 @app.route('/esp32-medshedule/<user_id>')
 def GetMedSchedule (user_id):
     user_id = user_id
-    medSchedule=dimMedicationSchedule.query.filter_by(user_id=user_id,FlagESP=True).all()
+    medSchedule=dimMedicationSchedule.query.filter_by(user_id=user_id,isDeleted=False).all()
     return jsonify(medSchedule)
 
 @app.route('/esp32-med')
